@@ -65,7 +65,7 @@ intersections_gdf.crs = 'epsg:4326'
 # Berhenti menghitung waktu
 end_time = time.time()
 
-intersections_gdf
+print(f"{len(intersections_gdf)} titik perpotongan.")
 waktu = end_time - start_time
 print(f"Waktu yang diperlukan: {waktu} detik")
 intersections_gdf

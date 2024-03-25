@@ -48,6 +48,10 @@ def is_overlap(bbox1, bbox2):
 def calculate_intersection_points(line1, line2):
     intersection_points = []
 
+    # Memeriksa apakah kedua garis berpotongan pada ujungnya
+    if line1[0] == line2[-1] or line1[-1] == line2[0]:
+        intersection_points.append(line1[0] if line1[0] == line2[-1] else line1[-1])
+
     for i in range(len(line1) - 1):
         for j in range(len(line2) - 1):
             x1, y1 = line1[i]
@@ -58,7 +62,7 @@ def calculate_intersection_points(line1, line2):
             # Hitung determinan
             det = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
 
-            if det != 0: #hindari pembagian dengan 0
+            if det != 0:  #hindari pembagian dengan 0
                 # Hitung titik perpotongan
                 px = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / det
                 py = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / det
@@ -74,25 +78,6 @@ def calculate_processing_time(start_time, end_time):
     processing_time = end_time - start_time
     return processing_time
 
-# Fungsi untuk membuat visualisasi jumlah dan hasil perpotongan
-def visualize_intersection_results(intersection_points, lines):
-    fig, ax = plt.subplots(figsize=(10, 8))
-
-    # Plot linestrings
-    for line_id, line_coords in lines:
-        x_coords, y_coords = zip(*line_coords)
-        ax.plot(x_coords, y_coords, label=f'Linestring {line_id}')
-        ax.scatter(x_coords, y_coords, color='black')
-
-    # Plot intersection points
-    if intersection_points:
-        x_int, y_int = zip(*intersection_points)
-        ax.scatter(x_int, y_int, color='red', label='Intersection Points')
-
-    ax.set_xlabel('Longitude')
-    ax.set_ylabel('Latitude')
-    ax.set_title('Linestrings and Intersection Points')
-    plt.show()
 
 # Panggil fungsi read file
 pathfile = input("Masukkan path file:")
@@ -103,13 +88,17 @@ data_linestring = create_linestring(file)
 
 # Membuat bounding box dan menampilkan linestring
 bounding_boxes = []
-fig, ax = plt.subplots(figsize=(10, 8))
+
 for id_linestring, coordinates in data_linestring:
     bounding_box = calculate_bounding_box(coordinates)
     bounding_boxes.append([id_linestring, bounding_box])
-    x_coords, y_coords = zip(*coordinates)
-    ax.plot(x_coords, y_coords, label=f'Linestring {id_linestring}')
-    ax.scatter(x_coords, y_coords, color='black')
+
+# Plot the polylines
+fig, ax = plt.subplots(figsize=(10, 8))
+
+for linestring_id, coordinates in data_linestring:
+    x, y = zip(*coordinates)
+    ax.plot(x, y, label=f'Linestring {linestring_id}', color='blue', linewidth=1)
 
 # Mencari titik-titik perpotongan
 start_time = time.time()  # Waktu awal pemrosesan
@@ -139,5 +128,12 @@ print(f"Total waktu pemrosesan: {processing_time} detik")
 df_intersection_points = pd.DataFrame(intersection_points, columns=['Longitude', 'Latitude'])
 df_intersection_points.to_csv('intersection_points.csv', index=False)
 
-# Visualisasi jumlah dan hasil perpotongan
-visualize_intersection_results(intersection_points,data_linestring )
+# Visualisasi titik-titik perpotongan
+x_intersect, y_intersect = zip(*intersection_points)
+ax.scatter(x_intersect, y_intersect, color='red', marker='o', s=50, label='Intersection Points')
+
+plt.xlabel('Longitude')
+plt.ylabel('Latitude')
+plt.title(f"Intersection points (Processing Time: {processing_time} seconds)")
+plt.grid(True)
+plt.show()
